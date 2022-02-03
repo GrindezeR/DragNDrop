@@ -1,77 +1,56 @@
 import React, {DragEvent, useState} from "react";
-import s from "../../App.module.css";
-import {BoardType, CardType} from "../../App";
+import s from "./Sections.module.scss";
+import {ItemType} from "../../App";
 
 type PropsType = {
-    boardId: string
-    boards: BoardType[]
-    items: CardType[]
-    initial: { [key: string]: CardType[] }
-    currentItem: CardType | null
-    setCurrentItem: (item: CardType) => void
-    setItems: (items: { [key: string]: CardType[] }) => void
+    items: ItemType[]
 }
 
-export const Section = ({initial, items, boards, currentItem, setCurrentItem, boardId, setItems}: PropsType) => {
-    const [newCardList, setNewCardList] = useState<CardType[]>([])
-    const [currentBoard, setCurrentBoard] = useState(boardId)
+export const Sections = ({items}: PropsType) => {
+    const [newCardList, setNewCardList] = useState<ItemType[]>([])
+    const [currentItem, setCurrentItem] = useState<ItemType | null>(null);
 
-    const onDragStartHandler = (e: DragEvent<HTMLDivElement>, item: CardType) => {
-        console.log('start')
+    const dragStart = (e: DragEvent<HTMLDivElement>, item: ItemType) => {
         setCurrentItem(item);
     }
-    const onDragLeaveHandler = (e: DragEvent<HTMLDivElement>) => {
+    const dragLeave = (e: DragEvent<HTMLDivElement>) => {
+        e.currentTarget.style.backgroundColor = 'white';
     }
-    const onDragOverHandler = (e: DragEvent<HTMLDivElement>) => {
+    const dragOver = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        // console.log(boardId)
+        e.currentTarget.style.backgroundColor = '#feffb3';
     }
-    const onDragEndHandler = (e: DragEvent<HTMLDivElement>) => {
-        console.log('end')
-    }
-    const onDropHandler = (e: DragEvent<HTMLDivElement>, card: CardType | null, currentBoardId: string) => {
-        console.log('drop')
+    const dragDrop = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        let newItems = items.filter(item => card?.id !== item.id);
-        console.log('AAAAA')
-        setItems({...initial, [boardId]: newItems})
-        // setNewCardList([...newCardList, {...currentItem, board: 'b2'}]);
+        e.currentTarget.style.backgroundColor = 'white';
+        currentItem && setNewCardList([...newCardList, currentItem]);
+        setCurrentItem(null);
     }
 
     const initialItems = items.map((c, i) => {
-        return <div key={c.id + i}
-                    draggable
-                    onDragStart={(e) => onDragStartHandler(e, c)}
-                    onDragLeave={onDragLeaveHandler}
-                    onDragOver={onDragOverHandler}
-                    onDragEnd={onDragEndHandler}
-                    onDrop={(e) => onDropHandler(e, c, c.boardId)}
-                    className={s[c.form]}/>
+        const onDragStartHandler = (e: DragEvent<HTMLDivElement>) => dragStart(e, c);
+        return <div key={c.id + i} className={s[c.form]} draggable onDragStart={onDragStartHandler}/>
     })
 
-    const resultItems = newCardList.map((c, i) => {
-        return <div key={c.id + i}
-                    draggable
-                    onDragStart={(e) => onDragStartHandler(e, c)}
-                    onDragLeave={onDragLeaveHandler}
-                    onDragOver={onDragOverHandler}
-                    onDragEnd={onDragEndHandler}
-                    onDrop={(e) => onDropHandler(e, c, c.boardId)}
-                    className={s[c.form]}/>
-    });
+    const resultItems = newCardList.map((c, i) => <div key={c.id + i} className={s[c.form]}/>);
 
     return (
-        <div>
-            <div onDragOver={onDragOverHandler}
-                 onDrop={e => onDropHandler(e, currentItem, boardId)}
-                 className={s.block}>
-                {initialItems}
+        <div className={s.wrapper}>
+            <div className={s.initialBlock}>
+                <span className={s.title}>Grab item</span>
+                <div className={s.initialShapesWrapper}>
+                    {initialItems}
+                </div>
             </div>
-            {/*<div onDragOver={e => e.preventDefault()}*/}
-            {/*     onDrop={onDropHandler}*/}
-            {/*     className={s.block}>*/}
-            {/*    {resultItems}*/}
-            {/*</div>*/}
+            <div className={s.resultBlock}
+                 onDragOver={dragOver}
+                 onDrop={dragDrop}
+                 onDragLeave={dragLeave}>
+                <span className={s.title}>Drop here</span>
+                <div className={s.resultShapesWrapper}>
+                    {resultItems}
+                </div>
+            </div>
         </div>
     );
 }
